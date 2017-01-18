@@ -53,6 +53,9 @@ class Aragonite {
         for(const input in this.inputs) {
           tasks.push(input.activate());
         }
+        for(const reporter in this.reporters) {
+          tasks.push(reporter.activate());
+        }
         return Promise.all(tasks);
       });
   }

@@ -9,42 +9,41 @@ class AragoniteReportInterface {
     this.server = server;
   }
 
+  _send(method, data) {
+    var tasks = [];
+    for(const reporter of this.server.reporters) {
+      tasks.push(reporter[method].apply(reporter, data));
+    }
+    return Promise.all(tasks);
+  }
+
   /**
    * Anounce that an environment has started.
    * @param {Object} conf standard options passed to runners.  See {@link Aragonite#start}.
-   * @param {Object} identifier unique details to this run
-   * @param {string} identifier.runner the name of the runner plugin that created this environment.
-   * @param {string} identifier.os the name of the environment's operating system
-   * @param {string} identifier.version the version of the environment's operating system
-   * @param {Object} identifier.extra additional details specific to a type of environment
+   * @param {Object} identifier unique details to this run.  See See {@link ReporterPlugin#start}.
+   * @return {Promise} resolves once all reports have been sent.
   */
   start(conf, identifier) {
-    for(const reporter of this.server.reporters) {
-      reporter.start(conf, identifier);
-    }
+    return this._send("start", [conf, identifier]);
   }
 
   /**
    * Anounce that an environment has finished successfully.
    * @param {Object} conf standard options passed to runners.  See {@link Aragonite#start}.
-   * @param {Object} identifier unique details to this run.  See {@link AragoniteReportInterface#start}.
+   * @param {Object} identifier unique details to this run.  See {@link ReporterPlugin#start}.
   */
   success(conf, identifier) {
-    for(const reporter of this.server.reporters) {
-      reporter.success(conf, identifier);
-    }
+    return this._send("success", [conf, identifier]);
   }
 
   /**
    * Anounce that an environment encountered an error.
    * @param {Object} conf standard options passed to runners.  See {@link Aragonite#start}.
-   * @param {Object} identifier unique details to this run.  See {@link AragoniteReportInterface#start}.
+   * @param {Object} identifier unique details to this run.  See {@link ReporterPlugin#start}.
    * @param {Error} err the error that was encountered.
   */
   error(conf, identifier, err) {
-    for(const reporter of this.server.reporters) {
-      reporter.error(conf, identifier, err);
-    }
+    return this._send("error", [conf, identifier, err]);
   }
 
 }
