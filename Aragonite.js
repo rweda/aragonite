@@ -39,7 +39,7 @@ class Aragonite {
         })
       );
     }
-    Promise.all(tasks);
+    return Promise.all(tasks);
   }
 
   /**
@@ -47,7 +47,7 @@ class Aragonite {
    * Searches for plugins bundled with Aragonite, as well as `require`-able plugins
   */
   loadPlugin(name) {
-    Promise
+    return Promise
       .resolve()
       .then(function() {
         require(path.join(__dirname, name, name));
