@@ -59,7 +59,7 @@ class Aragonite {
         require(name)
       })
       .then((Plugin) => {
-        new Plugin(this.opts);
+        new Plugin(this, this.opts);
       });
   }
 
