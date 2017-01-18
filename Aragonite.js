@@ -1,4 +1,5 @@
-path = require("path");
+"use strict";
+let path = require("path");
 
 /**
  * An entrypoint for the testing server.
