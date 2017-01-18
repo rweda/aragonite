@@ -12,6 +12,7 @@ class VBoxEnvironment extends Environment {
 
   /**
    * Adds additional fields to Aragonite options and calls {@link Plugin#constructor}.
+   * @param {AragoniteVBoxPlugin} vbox the plugin that created this instance.
    * @param {Aragonite} server the parent Aragonite server.
    * @param {Object} opts the Aragonite options.  See {@link AragoniteVBoxPlugin#constructor} for added properties.
    * @param {Object} conf standard options passed to runners.  See {@link Aragonite#start}.
@@ -24,12 +25,13 @@ class VBoxEnvironment extends Environment {
    * @param {boolean} machine.async if `true`, other environments can run at the same time.
    * @param {number} machine.cost the relative cost to run the machine, to prevent over-usage.
   */
-  constructor(server, opts, conf, machine) {
+  constructor(vbox, server, opts, conf, machine) {
     let env = {
       async: machine.async && opts.totalCost >= machine.cost,
       cost: machine.cost && machine.cost <= opts.totalCost ? machine.cost : 0
     };
     super(env);
+    this.vbox = vbox;
     this.server = server;
     this.opts = opts;
     this.conf = conf;
@@ -106,19 +108,20 @@ class VBoxEnvironment extends Environment {
    * @return {Promise} resolves once the machine has run all commands, and is ready to be shut down.
   */
   start(instance) {
-    // let server = ...;
     startup = spawnAsync(this.opts.vbox.exec, ["startvm", instance, "--type", "headless"])
       .then(() => {
         this.server.report.start(this.conf, this.identifier);
       });
-    return startup;
-    /*
-    return new Promise(function(resolve, reject) {
-      server.on("done", function() {
-        resolve();
+    this.vbox
+      .registerSocket(this.machine.vbox)
+      .then((namespace) => {
+        namespace.on("connect", (socket) => {
+          socket.emit("machine", this.machine);
+        });
+        new Promise((resolve, reject) => {
+          namespace.on("done", () => { resolve() });
+        });
       });
-    });
-    */
   }
 
   /**
