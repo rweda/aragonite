@@ -38,7 +38,7 @@ class Aragonite {
         this.loadPlugins(this.opts.inputs, this.inputs),
         this.loadPlugins(this.opts.runners, this.runners)
       ])
-      .then(=> {
+      .then((plugins) => {
         let tasks = [];
         for(input in this.inputs) {
           tasks.push(input.activate());

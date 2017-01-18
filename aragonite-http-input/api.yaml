@@ -1,0 +1,43 @@
+swagger: 2.0
+info:
+  title: Aragonite HTTP Input Plugin
+  description: |
+    The HTTP Input plugin for Aragonite creates an external-facing API that can be used to start Aragonite runs.
+    
+    By default, the plugin starts a new server on port `5717`, although the port can be changed in the configuration.
+  license:
+    name: MIT
+    url: https://github.com/rweda/aragonite/blob/master/LICENSE
+schemes:
+  - http
+host: aragonite:5717
+externalDocs: https://rweda.github.io/aragonite
+paths:
+  /:
+    put:
+      description: |
+        Starts a new Aragonite run.  Several generic parameters are provided, but additional data provided will be
+        passed to the Aragonite runner.
+      consumes:
+        multipart/form-data
+      parameters:
+        - name: name
+          type: string
+          in: formData
+          description: Provide a human-readable name to identify this run.
+        - name: repo
+          type: string
+          in: formData
+          description: Provide a reference to a specific project repository to use.
+        - name: commit
+          type: string
+          in: formData
+          description: Provide a reference to a specific commit in a repository to use.
+        - name: archive
+          type: file
+          in: formData
+          description: Provide a compressed folder containing a project to test.
+      responses:
+        '200':
+          description: |
+            The Aragonite run has started successfully.
