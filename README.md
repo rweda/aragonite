@@ -27,3 +27,4 @@ See [Usage with Web Component Tester][] for a guide using Aragonite to test brow
 
 [plugin list]: https://github.com/rweda/aragonite/wiki
 [plugin documentation]: https://github.com/rweda/aragonite/wiki
+[Usage with Web Component Tester]: https://github.com/rweda/aragonite/wiki/Usage-with-Web-Component-Tester
