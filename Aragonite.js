@@ -33,10 +33,18 @@ class Aragonite {
   start() {
     this.inputs = [];
     this.runners = [];
-    return Promise.all([
-      this.loadPlugins(this.opts.inputs, this.inputs),
-      this.loadPlugins(this.opts.runners, this.runners)
-    ]);
+    return Promise
+      .all([
+        this.loadPlugins(this.opts.inputs, this.inputs),
+        this.loadPlugins(this.opts.runners, this.runners)
+      ])
+      .then(=> {
+        let tasks = [];
+        for(input in this.inputs) {
+          tasks.push(input.activate());
+        }
+        return Promise.all(tasks);
+      });
   }
 
   /**

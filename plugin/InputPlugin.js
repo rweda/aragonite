@@ -9,6 +9,15 @@ var Plugin = require("./Plugin");
 */
 class InputPlugin extends Plugin {
 
+  /**
+   * Prepares this plugin to handle input.  Requires all Aragonite plugins to be loaded.
+   * @abstract
+   * @return {Promise} resolves once the plugin is ready to handle input.
+  */
+  activate() {
+    Promise.resolve();
+  }
+
 }
 
 module.exports = InputPlugin;
