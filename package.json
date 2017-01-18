@@ -24,7 +24,9 @@
     "tmp": "0.0.31"
   },
   "dependencies": {
+    "child-process-promise": "^2.2.0",
     "express": "^4.14.0",
-    "multer": "^1.2.1"
+    "multer": "^1.2.1",
+    "shortid": "^2.2.6"
   }
 }

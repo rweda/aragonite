@@ -1,6 +1,9 @@
 "use strict";
 let path = require("path");
 
+var AragoniteReportInterface = require("./AragoniteReportInterface");
+var EnvironmentRunner = require("./environment/EnvironmentRunner");
+
 /**
  * An entrypoint for the testing server.
 */
@@ -13,6 +16,8 @@ class Aragonite {
     let opts = {};
     opts.inputs = ["aragonite-http-input"];
     opts.runners = ["aragonite-vbox"];
+    opts.reporters = ["aragonite-socket-reporter"];
+    opts.totalCost = 0;
     return opts;
   }
 
@@ -21,9 +26,12 @@ class Aragonite {
    * @param {Object} opts options to configure the usage of Aragonite.
    * @param {string[]} [opts.inputs=["aragonite-http-input"]] plugins used to trigger Aragonite runs.
    * @param {string[]} [opts.runners=["aragonite-vbox"]] plugins used to start testing environments
+   * @param {number} [opts.totalCost=0] allows multiple environments to be run at the same time, without over-using the
+   *   system.  Each environment can be assigned a cost, and Aragonite will ensure that machines don't exceed the total.
   */
   constructor(opts) {
     this.opts = Object.assign({}, this.defaults, opts);
+    this._reportInterface = new AragoniteReportInterface(this);
   }
 
   /**
@@ -33,10 +41,12 @@ class Aragonite {
   start() {
     this.inputs = [];
     this.runners = [];
+    this.reporters = [];
     return Promise
       .all([
         this.loadPlugins(this.opts.inputs, this.inputs),
-        this.loadPlugins(this.opts.runners, this.runners)
+        this.loadPlugins(this.opts.runners, this.runners),
+        this.loadPlugins(this.opts.reporters, this.reporters)
       ])
       .then((plugins) => {
         let tasks = [];
@@ -69,6 +79,14 @@ class Aragonite {
         let environments = [].concat(collections);
         new EnvironmentRunner(this.opts, opts, environments);
       });
+  }
+
+  /**
+   * Provides a clean reporting interface to abstract the different reporters.
+   * @return {AragoniteReportInterface}
+  */
+  get report() {
+    return this._reportInterface;
   }
 
   /**

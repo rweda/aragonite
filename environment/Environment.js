@@ -6,14 +6,12 @@
 class Environment {
 
   /**
-   * @param {Object} opts standard options passed to runners.  See {@link Aragonite#start}.
    * @param {Object} env options to configure this environment.
    * @param {boolean} [env.async=false] if `true`, this environment can be run at the same time as other environments.
    * @param {number} [env.cost=0] limits the number of environments running in parallel to prevent system resources from
    *   being over-allocated, e.g. the amount of RAM that this machine needs to run properly.
   */
-  constructor(opts, env) {
-    this.opts = opts;
+  constructor(env) {
     this.async = env.async;
     this.cost = env.cost;
     this.finished = false;

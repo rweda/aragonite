@@ -23,6 +23,7 @@ class EnvironmentRunner {
     this.finished = [];
     this.running = [];
     this.runAsync = true;
+    this.totalCost = opts && opts.totalCost ? opts.totalCost : null;
     if(environments.length > 0) {
       this.start();
     }
