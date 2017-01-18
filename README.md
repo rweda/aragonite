@@ -1,4 +1,6 @@
 # Aragonite
+[![Travis CI](https://travis-ci.org/rweda/aragonite.svg?branch=master)](https://travis-ci.org/rweda/aragonite)
+
 Automatically test projects across multiple environments on your own infrastructure.
 
 Aragonite is an open-source, self-hosted server that can manage testing environments across platforms and browsers,
