@@ -18,7 +18,7 @@ class AragoniteHTTPInputPlugin extends InputPlugin {
   }
 
   /**
-   * Adds additional fields to the program options before calling the standard {@link Plugin#constructor}.
+   * Adds additional fields to the program options, calls {@link Plugin#constructor}, and prepares HTTP routing.
    * @param {Aragonite} server the parent Aragonite server.
    * @param {Object} opts the Aragonite options.
    * @param {Object} opts.httpInput options to configure {@link AragoniteHTTPInputPlugin}
@@ -28,6 +28,11 @@ class AragoniteHTTPInputPlugin extends InputPlugin {
   constructor(server, opts) {
     opts.httpInput = Object.assign({}, this.defaults, opts.httpInput);
     super(server, opts);
+    this.app = express();
+    let upload = multer({dest: this.httpInput.storage})
+    this.app.put("/", multer.fields(["source"]), (req, res, next) => {
+      this.handle(req, res, next);
+    });
   }
 
   /**
@@ -35,11 +40,6 @@ class AragoniteHTTPInputPlugin extends InputPlugin {
    * @return {Promise} resolves once the server is listening.
   */
   activate() {
-    this.app = express();
-    let upload = multer({dest: this.httpInput.storage})
-    this.app.put("/", multer.fields(["source"]), (req, res, next) => {
-      this.handle(req, res, next);
-    });
     return new Promise((resolve, reject) => {
       this.app.listen(this.opts.httpInput.port);
     });
