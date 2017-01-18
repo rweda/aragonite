@@ -52,7 +52,11 @@ class AragoniteHTTPInputPlugin extends InputPlugin {
    * Express/Connect URL handler to start Aragonite runs.
   */
   handle(req, res, next) {
-    res.send("Started.");
+    this.server
+      .start(req.body)
+      .then(() => {
+        res.send("Started.");
+      });
   }
 
 }

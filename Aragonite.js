@@ -40,10 +40,34 @@ class Aragonite {
       ])
       .then((plugins) => {
         let tasks = [];
-        for(input in this.inputs) {
+        for(const input in this.inputs) {
           tasks.push(input.activate());
         }
         return Promise.all(tasks);
+      });
+  }
+
+  /**
+   * Start an Aragonite run.
+   * @param {Object} opts configuration to pass to runners.  Several generic fields are defined, but additional fields
+   *   will also be passed along.
+   * @param {string} opts.name a human-readable name for the Aragonite run.
+   * @param {string} opts.repo a project repository to test
+   * @param {string} opts.commit a specific commit in the project repository to test
+   * @param {Object} opts.archive an archived directory of the project to test
+   * @param {string} opts.archive.path the full path to the uploaded file
+   * @param {string} opts.archive.originalname the name of the file at the time of upload (might have changed on server)
+  */
+  run(opts) {
+    let collect = [];
+    for(const runner in this.runners) {
+      collect.push(runner.start(opts));
+    }
+    Promise
+      .all(collect)
+      .then((collections) => {
+        let environments = [].concat(collections);
+        new EnvironmentRunner(this.opts, opts, environments);
       });
   }
 
