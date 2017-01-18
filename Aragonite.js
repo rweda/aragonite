@@ -11,6 +11,7 @@ class Aragonite {
   */
   get defaults() {
     let opts = {};
+    opts.inputs = ["aragonite-http-input"];
     opts.runners = ["aragonite-vbox"];
     return opts;
   }
@@ -18,6 +19,7 @@ class Aragonite {
   /**
    * Prepare a testing server to be started with {@link Aragonite#start}.
    * @param {Object} opts options to configure the usage of Aragonite.
+   * @param {string[]} [opts.inputs=["aragonite-http-input"]] plugins used to trigger Aragonite runs.
    * @param {string[]} [opts.runners=["aragonite-vbox"]] plugins used to start testing environments
   */
   constructor(opts) {
@@ -29,13 +31,27 @@ class Aragonite {
    * @return {Promise} resolves when the testing server is running.
   */
   start() {
-    let tasks = [];
+    this.inputs = [];
     this.runners = [];
-    for(const plugin of this.opts.runners) {
+    return Promise.all([
+      this.loadPlugins(this.opts.inputs, this.inputs),
+      this.loadPlugins(this.opts.runners, this.runners)
+    ]);
+  }
+
+  /**
+   * Loads a set of plugins by name.  See {@link Aragonite#loadPlugin} for loading methods.
+   * @param {string[]} plugins the name of plugins to load
+   * @param {Plugin[]} output an array to insert plugins into.
+   * @return {Promise} resolves when all plugins have loaded.
+  */
+  loadPlugins(plugins, output) {
+    let tasks = [];
+    for(const name of plugins) {
       tasks.push(this
-        .loadPlugin(plugin)
-        .then((runner) => {
-          this.runners.push(runner);
+        .loadPlugin(name)
+        .then ((plugin) => {
+          output.push(plugin);
         })
       );
     }
@@ -44,7 +60,9 @@ class Aragonite {
 
   /**
    * Loads a plugin by name.
-   * Searches for plugins bundled with Aragonite, as well as `require`-able plugins
+   * Searches for plugins bundled with Aragonite, as well as `require`-able plugins from NPM.
+   * @param {string} name the name of a plugin to load.
+   * @return {Promise<Plugin>} resolves to a Plugin instance.
   */
   loadPlugin(name) {
     return Promise
