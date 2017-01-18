@@ -3,6 +3,7 @@
 var InputPlugin = require("../plugin/InputPlugin");
 var express = require("express");
 var multer = require("multer");
+var path = require("path");
 
 /**
  * Defines an HTTP API to listen to requests from users, CI, or other automated sources.
@@ -10,7 +11,7 @@ var multer = require("multer");
 */
 class AragoniteHTTPInputPlugin extends InputPlugin {
 
-  get defaults() {
+  static get defaults() {
     let opts = {};
     opts.port = 5717;
     opts.storage = path.join(__dirname, "tmp");
@@ -26,12 +27,14 @@ class AragoniteHTTPInputPlugin extends InputPlugin {
    * @param {string} [opts.httpInput.storage="./tmp"] a directory to store uploaded files in.
   */
   constructor(server, opts) {
-    opts.httpInput = Object.assign({}, this.defaults, opts.httpInput);
+    opts.httpInput = Object.assign({}, AragoniteHTTPInputPlugin.defaults, opts.httpInput);
     super(server, opts);
     this.app = express();
-    let upload = multer({dest: this.httpInput.storage})
-    this.app.put("/", multer.fields(["source"]), (req, res, next) => {
-      this.handle(req, res, next);
+    let upload = multer({dest: this.opts.httpInput.storage}).fields(["source"]);
+    this.app.put("/", (req, res, next) => {
+      upload(req, res, (err) => {
+        this.handle(req, res, next);
+      });
     });
   }
 
