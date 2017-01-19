@@ -34,7 +34,7 @@ class AragoniteVBoxPlugin extends RunnerPlugin {
    * @param {string} opts.vbox.machines[].name a human-readable description of the machine.
    * @param {string} opts.vbox.machines[].vbox the VirtualBox identifier of the machine.
    * @param {string} opts.vbox.machines[].snap a VirtualBox snapshot of the given machine to clone
-   * @param {string} opts.vbox.machines[].dist the platform the machine is running, e.g. "OSX", "Windows", "Ubuntu"
+   * @param {string} opts.vbox.machines[].dist the platform the machine is running, e.g. "OSX", "Windows", "Linux"
    * @param {string} opts.vbox.machines[].version the OS version, e.g. Ubuntu: "14.04", Windows: "XP", OSX: "10.11"
    * @param {boolean} opts.vbox.machines[].async if `true`, other environments can run at the same time.
    * @param {number} opts.vbox.machines[].cost the relative cost to run the machine, to prevent over-usage.  If the cost
@@ -45,40 +45,16 @@ class AragoniteVBoxPlugin extends RunnerPlugin {
     super(server, opts);
     this.app = express();
     this.io = require("socket.io")(this.app);
-    this.app.get("/connect", (req, res, next) => {
-      let image = req.query.image;
-      if(this.listeners[image]) {
-        let socket = shortid.generate();
-        this.listeners[image](socket);
-        delete this.listeners[image];
-        res.send(socket);
-      }
-    });
     this.io.on("connection", function(socket) {
-      socket.on("join", function(id) {
-        socket.join(id);
+      socket.on("mac", function(mac) {
+        socket.join(mac);
       });
     });
   }
 
   /**
-   * Request a new Socket.io namespace to be assigned to a machine with the given VirtualBox name.
-   * @param {string} vbox the name of a VirtualBox machine
-  */
-  register(vbox) {
-    if(!this.listeners) {
-      this.listeners = {};
-    }
-    return new Promise((resolve, reject) => {
-      this.listeners[vbox] = (id) => {
-        resolve(this.io.namespace(id));
-      }
-    });
-  }
-
-  /**
    * Determines what VirtualBox machines should be included in a new Aragonite run.
-   * @param {Object} opts See `opts` in {@link Aragonite#start}
+   * @param {Object} opts See `opts` in {@link Aragonite#run}
    * @return {Promise<Environment[]>} resolve an array of {@link Environment} items.
   */
   start(opts) {

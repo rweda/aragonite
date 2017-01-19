@@ -9,7 +9,7 @@ class EnvironmentRunner {
    * Configures the Aragonite run and starts running environments.
    * @param {Aragonite} server the Aragonite server.
    * @param {Object} opts the Aragonite options.  See {@link Aragonite#constructor}.
-   * @param {Object} conf run-specific configuration.  See {@link Aragonite#start}.
+   * @param {Object} conf run-specific configuration.  See {@link Aragonite#run}.
    * @param {Environment[]} environments the environments that are part of this run.
   */
   constructor(server, opts, conf, environments) {

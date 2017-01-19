@@ -15,12 +15,12 @@ class VBoxEnvironment extends Environment {
    * @param {AragoniteVBoxPlugin} vbox the plugin that created this instance.
    * @param {Aragonite} server the parent Aragonite server.
    * @param {Object} opts the Aragonite options.  See {@link AragoniteVBoxPlugin#constructor} for added properties.
-   * @param {Object} conf standard options passed to runners.  See {@link Aragonite#start}.
+   * @param {Object} conf standard options passed to runners.  See {@link Aragonite#run}.
    * @param {Object} machine the machine templates that can be used to test projects
    * @param {string} machine.name a human-readable description of the machine.
    * @param {string} machine.vbox the VirtualBox identifier of the machine.
    * @param {string} machine.snap a VirtualBox snapshot of the given machine to clone
-   * @param {string} machine.dist the platform the machine is running, e.g. "OSX", "Windows", "Ubuntu"
+   * @param {string} machine.dist the platform the machine is running, e.g. "OSX", "Windows", "Linux"
    * @param {string} machine.version the OS version, e.g. Ubuntu: "14.04", Windows: "XP", OSX: "10.11"
    * @param {boolean} machine.async if `true`, other environments can run at the same time.
    * @param {number} machine.cost the relative cost to run the machine, to prevent over-usage.
@@ -64,7 +64,12 @@ class VBoxEnvironment extends Environment {
       .provision()
       .then((i) => {
         instance = i;
-        return this.start(instance);
+        this.namespace = this.vbox.io.of(instance.mac);
+        this.namespace.on("connection", (socket) => {
+          socket.emit("machine", this.machine);
+          socket.emit("conf", this.conf);
+        });
+        return this.start(instance.name);
       })
       .catch((err) => {
         error = error;
@@ -73,7 +78,7 @@ class VBoxEnvironment extends Environment {
       })
       .then(() => {
         if(instance) {
-          return this.cleanup(instance);
+          return this.cleanup(instance.name);
         }
       })
       .then(() => {
@@ -88,7 +93,7 @@ class VBoxEnvironment extends Environment {
 
   /**
    * Clone the specfied VirtualBox image.
-   * @return {Promise<Object>} resolves `{name}` once the machine is cloned.
+   * @return {Promise<Object>} resolves `{name, mac}` once the machine is cloned.
   */
   provision() {
     let name = this.opts.vbox.prefix + this.machine.vbox + "-" + shortid.generate();
@@ -98,7 +103,11 @@ class VBoxEnvironment extends Environment {
     }
     return spawnAsync(this.opts.vbox.exec, opts)
       .then(() => {
-        return {name: name};
+        spawnAsync(this.opts.vbox.exec, ["showvminfo", "--machinereadable", name], {capture: ['stdout']});
+      })
+      .then((res) => {
+        mac = res.stdout.toString().match(/macaddress1="[0-9A-E]"/)[1];
+        {name: name, mac: mac};
       });
   }
 
@@ -108,19 +117,17 @@ class VBoxEnvironment extends Environment {
    * @return {Promise} resolves once the machine has run all commands, and is ready to be shut down.
   */
   start(instance) {
+    finished = new Promise((resolve, reject) => {
+      this.namespace.on("done", () => {
+        resolve();
+      });
+    });
     startup = spawnAsync(this.opts.vbox.exec, ["startvm", instance, "--type", "headless"])
       .then(() => {
         this.server.report.start(this.conf, this.identifier);
-      });
-    this.vbox
-      .registerSocket(this.machine.vbox)
-      .then((namespace) => {
-        namespace.on("connect", (socket) => {
-          socket.emit("machine", this.machine);
-        });
-        new Promise((resolve, reject) => {
-          namespace.on("done", () => { resolve() });
-        });
+      })
+      .then(() => {
+        return finished;
       });
   }
 

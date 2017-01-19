@@ -1,0 +1,156 @@
+swagger: 2.0
+info:
+  title: Aragonite VirtualBox Runner Plugin
+  description: |
+    The VirtualBox plugin creates VirtualBox machines to run tests in, and communicates with the internal operating
+    system to provide run information and transmit information to reporters.
+    
+    By default, the plugin starts a new server on port `5720`, although the port can be changed in the configuration.
+    
+    Communication occurs over Socket communication.  Examples are given using [socket.io-client][] running inside a Node
+    server.
+    
+    [socket.io-client]: https://www.npmjs.com/package/socket.io-client
+  license:
+    name: MIT
+    url: https://github.com/rweda/aragonite/blob/master/LICENSE
+schemes:
+  - ws
+host: aragonite:5720
+externalDocs: https://rweda.github.io/aragonite
+paths:
+  mac:
+    put:
+      summary: "EMIT mac"
+      description: |
+        Multiple VirtualBox machines can use the same Socket.io port.  To keep them seperate, machines are identified by
+        MAC address.
+        
+        Clients should send the MAC address of the VirtualBox machine when the connect.
+        
+        If the VirtualBox is configured as NAT (default), the host machine can be reached at the gateway IP.
+        
+        ```js
+        var gateway = "10.0.2.2";
+        var port = 5720;
+        var socket = require("socket.io-client")("http://"+gateway+":"+port);
+        require("macaddress").all(function(err, all) {
+          if(err) { throw err; }
+          for(var iface in all) {
+            if(!obj.hasOwnProperty(iface)) { continue; }
+            socket.emit("mac", iface.mac.replace(/\:/, ""));
+          }
+        }
+        ```
+  machine:
+    patch:
+      summary: "HOOK machine"
+      description: |
+        Basic configuration that was used to generate this machine is sent once clients are registered under the correct
+        MAC address.
+        
+        ```js
+        socket.on("machine", function(machine) {
+          console.log("VirtualBox name: "+machine.name);
+        });
+        socket.emit("mac", "080027DE6948");
+        ```
+      responses:
+        '200':
+          description: Provides basic machine details.
+          schema:
+            $ref: '#/definitions/MachineData'
+          example: &MachineDataExample
+            name: "Windows 7"
+            vbox: "MyProj-Win7"
+            snap: "TestSnapshot"
+            dist: "Windows"
+            version: "7"
+            async: true
+            cost: 2
+  conf:
+    patch:
+      summary: "HOOK conf"
+      description: |
+        Sends information about the current Aragonite run once clients are registered under the correct MAC address.
+        
+        ```js
+        socket.on("conf", function(conf) {
+          console.log("Run name: "+conf.name);
+        });
+        socket.emit("mac", "080027DE6948");
+        ```
+      responses:
+        '200':
+          description: Provides run information.
+          schema:
+            $ref: '#/definitions/ConfData'
+          example: &ConfDataExample
+            name: "Build #7"
+            repo: "https://github.com/rweda/aragonite.git"
+            commit: "d6da1a2c3061bbc30a0f547f026e5bb112a18c8e"
+  done:
+    put:
+      summary: "EMIT done"
+      description: |
+        Clients can inform Aragonite that they have finished running.  The machine will be shut down and deleted, and
+        the reporter will be informed that this environment has finished.
+        
+        ```js
+        socket.emit("mac", "080027DE6948");
+        MyTests.run(function(err) {
+          socket.emit("done");
+        });
+        ```
+definitions:
+  MachineData:
+    type: object
+    required:
+      - vbox
+      - dist
+      - version
+    properties:
+      name:
+        type: string
+        description: A human-readable description of the machine.
+      vbox:
+        type: string
+        description: The VirtualBox identifier of the machine.
+      snap:
+        type: string
+        description: A VirtualBox snapshot of the given machine to clone.
+      dist:
+        type: string
+        description: The platform the machine is running.
+        enum:
+          - OSX
+          - Windows
+          - Linux
+      version:
+        type: string
+        description: The OS version, e.g. "14.04" for Ubuntu, "XP" for Windows, "10.11" for OSX.
+      async:
+        type: boolean
+        description: If `true`, other environments can run at the same time.
+      cost:
+        type: number
+        description: |
+          The relative cost to run the machine, to prevent over-usage.  If the cost is greater than the machine's total
+          cost, the machine will be converted to be isolated (non-async).
+    example: *MachineDataExample
+  ConfData:
+    type: object
+    properties:
+      name:
+        type: string
+        description: A human-readable name for the Aragonite run.
+      repo:
+        type: string
+        description: A project repository to test
+      commit:
+        type: string
+        description: A specific commit in the project repository to test
+      archive:
+        type: object
+        description: An archived directory of the project to test
+    example: *ConfDataExample

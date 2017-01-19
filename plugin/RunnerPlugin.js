@@ -13,7 +13,7 @@ class RunnerPlugin extends Plugin {
   /**
    * Determines what environments should be included in a new Aragonite run.
    * @abstract
-   * @param {Object} opts See `opts` in {@link Aragonite#start}
+   * @param {Object} opts See `opts` in {@link Aragonite#run}
    * @return {Promise<Environment[]>} resolve an array of {@link Environment} items.
   */
   start(opts) {
