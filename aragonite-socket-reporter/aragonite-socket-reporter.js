@@ -41,7 +41,11 @@ class AragoniteSocketReporter extends ReporterPlugin {
     });
   }
 
-  _start(message, data) {
+  /**
+   * Sends a Socket message.
+   * @return {Promise} resolves when the message is sent.
+  */
+  _send(message, data) {
     return new Promise((resolve, reject) => {
       this.io.emit(message, data);
       resolve();
@@ -77,6 +81,21 @@ class AragoniteSocketReporter extends ReporterPlugin {
   */
   error(conf, identifier, err) {
     return this._send("error", [conf, identifier, err]);
+  }
+
+  /**
+   * Terminates this reporter.
+   * @return {Promise} resolves when the reporter is fully shut down.
+  */
+  stop() {
+    return new Promise((resolve, reject) => {
+      for(socket of this.io.sockets.sockets) {
+        socket.disconnect(true);
+      }
+      this.app.close(function() {
+        resolve();
+      });
+    });
   }
 
 }

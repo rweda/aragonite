@@ -66,6 +66,22 @@ class AragoniteVBoxPlugin extends RunnerPlugin {
     );
   }
 
+  /**
+   * Stop this runner.
+   * TODO: Stop VirtualBox machines.
+   * @return {Promise} resolves when the runner has fully terminated.
+  */
+  stop() {
+    return Promise((resolve, reject) => {
+      for(socket of this.io.sockets.sockets) {
+        socket.disconnect(true);
+      }
+      this.app.close(function() {
+        resolve();
+      });
+    });
+  }
+
 }
 
 module.exports = AragoniteVBoxPlugin;

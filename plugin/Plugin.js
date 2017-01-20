@@ -14,6 +14,14 @@ class Plugin {
     this.opts = opts;
   }
 
+  /**
+   * Stops this plugin.
+   * @return {Promise} resolves when this plugin has fully terminated.
+  */
+  stop() {
+    return Promise.resolve();
+  }
+
 }
 
 module.exports = Plugin;

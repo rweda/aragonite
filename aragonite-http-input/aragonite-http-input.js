@@ -44,7 +44,21 @@ class AragoniteHTTPInputPlugin extends InputPlugin {
   */
   activate() {
     return new Promise((resolve, reject) => {
-      this.app.listen(this.opts.httpInput.port);
+      this.app.listen(this.opts.httpInput.port, function() {
+        resolve();
+      });
+    });
+  }
+
+  /**
+   * Stops the HTTP server.
+   * @return {Promise} resolves once the server has terminated.
+  */
+  stop() {
+    return new Promise((resolve, reject) => {
+      this.app.stop(function() {
+        resolve();
+      });
     });
   }
 

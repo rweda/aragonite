@@ -61,6 +61,20 @@ class Aragonite {
   }
 
   /**
+   * Stops all plugins and shuts down Aragonite.
+   * @return {Promise} resolves when all plugins have stopped.
+  */
+  stop() {
+    let tasks = [];
+    for(const plugins of [this.inputs, this.runners, this.reporters]) {
+      for (const plugin of plugins) {
+        tasks.push(plugin.stop());
+      }
+    }
+    return Promise.all(tasks);
+  }
+
+  /**
    * Start an Aragonite run.
    * @param {Object} opts configuration to pass to runners.  Several generic fields are defined, but additional fields
    *   will also be passed along.
