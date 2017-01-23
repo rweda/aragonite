@@ -44,7 +44,7 @@ class AragoniteHTTPInputPlugin extends InputPlugin {
   */
   activate() {
     return new Promise((resolve, reject) => {
-      this.app.listen(this.opts.httpInput.port, function() {
+      this.http = this.app.listen(this.opts.httpInput.port, function() {
         resolve();
       });
     });
@@ -56,7 +56,8 @@ class AragoniteHTTPInputPlugin extends InputPlugin {
   */
   stop() {
     return new Promise((resolve, reject) => {
-      this.app.stop(function() {
+      if(!this.http || !this.http.close) { return resolve(); }
+      this.http.close(function() {
         resolve();
       });
     });
@@ -66,10 +67,21 @@ class AragoniteHTTPInputPlugin extends InputPlugin {
    * Express/Connect URL handler to start Aragonite runs.
   */
   handle(req, res, next) {
+    if(!this.server || !this.server.run) {
+      console.error(new ReferenceError("Improperly configured AragoniteHTTPInputPlugin: no server"));
+      res.status(500);
+      return res.send("Improperly configured AragoniteHTTPInputPlugin.");
+    }
     this.server
-      .start(req.body)
+      .run(req.body)
       .then(() => {
         res.send("Started.");
+      })
+      .catch(err => {
+        console.error(err);
+        res.status(500);
+        res.send("Internal Server Error.");
+        throw err;
       });
   }
 

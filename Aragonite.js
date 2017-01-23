@@ -32,6 +32,9 @@ class Aragonite {
   constructor(opts) {
     this.opts = Object.assign({}, this.defaults, opts);
     this._reportInterface = new AragoniteReportInterface(this);
+    this.inputs = [];
+    this.runners = [];
+    this.reporters = [];
   }
 
   /**
@@ -39,9 +42,6 @@ class Aragonite {
    * @return {Promise} resolves when the testing server is running.
   */
   start() {
-    this.inputs = [];
-    this.runners = [];
-    this.reporters = [];
     return Promise
       .all([
         this.loadPlugins(this.opts.inputs, this.inputs),
@@ -50,10 +50,10 @@ class Aragonite {
       ])
       .then((plugins) => {
         let tasks = [];
-        for(const input in this.inputs) {
+        for(const input of this.inputs) {
           tasks.push(input.activate());
         }
-        for(const reporter in this.reporters) {
+        for(const reporter of this.reporters) {
           tasks.push(reporter.activate());
         }
         return Promise.all(tasks);
@@ -87,14 +87,14 @@ class Aragonite {
   */
   run(opts) {
     let collect = [];
-    for(const runner in this.runners) {
+    for(const runner of this.runners) {
       collect.push(runner.start(opts));
     }
-    Promise
+    return Promise
       .all(collect)
       .then((collections) => {
-        let environments = [].concat(collections);
-        new EnvironmentRunner(this.opts, opts, environments);
+        let environments = collections.reduce((a, b) => { return a.concat(b); }, []);
+        new EnvironmentRunner(this, this.opts, opts, environments);
       });
   }
 
@@ -134,17 +134,17 @@ class Aragonite {
   loadPlugin(name) {
     return Promise
       .resolve()
-      .then(function() {
-        require(path.join(__dirname, name, name));
+      .then(() => {
+        return require(path.join(__dirname, name, name));
       })
-      .catch(function() {
-        require(path.join(__dirname, name));
+      .catch(() => {
+        return require(path.join(__dirname, name));
       })
-      .catch(function() {
-        require(name)
+      .catch(() => {
+        return require(name);
       })
       .then((Plugin) => {
-        new Plugin(this, this.opts);
+        return new Plugin(this, this.opts);
       });
   }
 

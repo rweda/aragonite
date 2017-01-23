@@ -13,7 +13,7 @@ describe("aragonite.loadPlugin()", function() {
 
   describe("given 'aragonite-vbox' (bundled plugin)", function() {
     it("should find the plugin", function() {
-      aragon
+      return aragon
         .loadPlugin('aragonite-vbox')
         .then(function(AragoniteVBoxPlugin) {
           AragoniteVBoxPlugin.should.be.a.function;
@@ -21,20 +21,19 @@ describe("aragonite.loadPlugin()", function() {
     });
   });
 
-  describe("given 'mocha' (NPM package)", function() {
+  describe("given 'aragonite-http-input' (bundled plugin)", function() {
     it("should find the plugin", function() {
-      aragon
-        .loadPlugin("chai")
-        .then(function(c) {
-          c.should.be.an.object;
-          c.should.have.property("should");
+      return aragon
+        .loadPlugin('aragonite-http-input')
+        .then(function(AragoniteHTTPInputPlugin) {
+          AragoniteHTTPInputPlugin.should.be.a.function;
         });
     });
   });
 
   describe("given 'not-a-package' (non-existent package)", function() {
     it("shouldn't find the plugin", function() {
-      aragon
+      return aragon
         .loadPlugin("not-a-package")
         .then(function() {
           should.fail();

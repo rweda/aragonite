@@ -2,7 +2,7 @@
 
 var shortid = require("shortid");
 var spawnAsync = require("child-process-promise").spawn;
-var Environment = require("../environmnt/Environment");
+var Environment = require("../environment/Environment");
 
 /**
  * Defines a VirtualBox instance to run.
@@ -60,12 +60,13 @@ class VBoxEnvironment extends Environment {
   run() {
     let instance = null;
     let error = null;
-    this
+    return this
       .provision()
       .then((i) => {
         instance = i;
-        this.namespace = this.vbox.io.of(instance.mac);
+        this.namespace = this.vbox.io.of("/"+instance.mac);
         this.namespace.on("connection", (socket) => {
+          this.vbox.sockets.push(socket);
           socket.emit("machine", this.machine);
           socket.emit("conf", this.conf);
         });
@@ -88,6 +89,10 @@ class VBoxEnvironment extends Environment {
         else {
           return this.server.report.success(this.conf, this.identifier);
         }
+      })
+      .catch((err) => {
+        console.error(err);
+        throw err;
       });
   }
 
@@ -103,11 +108,11 @@ class VBoxEnvironment extends Environment {
     }
     return spawnAsync(this.opts.vbox.exec, opts)
       .then(() => {
-        spawnAsync(this.opts.vbox.exec, ["showvminfo", "--machinereadable", name], {capture: ['stdout']});
+        return spawnAsync(this.opts.vbox.exec, ["showvminfo", "--machinereadable", name], {capture: ['stdout']});
       })
       .then((res) => {
-        mac = res.stdout.toString().match(/macaddress1="[0-9A-E]"/)[1];
-        {name: name, mac: mac};
+        let mac = res.stdout.toString().match(/macaddress1="([^"]+)"/)[1];
+        return {name: name, mac: mac};
       });
   }
 
@@ -117,14 +122,16 @@ class VBoxEnvironment extends Environment {
    * @return {Promise} resolves once the machine has run all commands, and is ready to be shut down.
   */
   start(instance) {
-    finished = new Promise((resolve, reject) => {
-      this.namespace.on("done", () => {
-        resolve();
+    let finished = new Promise((resolve, reject) => {
+      this.namespace.on("connection", (socket) => {
+        socket.on("done", () => {
+          resolve();
+        });
       });
     });
-    startup = spawnAsync(this.opts.vbox.exec, ["startvm", instance, "--type", "headless"])
+    return startup = spawnAsync(this.opts.vbox.exec, ["startvm", instance, "--type", "headless"])
       .then(() => {
-        this.server.report.start(this.conf, this.identifier);
+        return this.server.report.start(this.conf, this.identifier);
       })
       .then(() => {
         return finished;
@@ -139,8 +146,10 @@ class VBoxEnvironment extends Environment {
   cleanup(instance) {
     return spawnAsync(this.opts.vbox.exec, ["controlvm", instance, "poweroff"])
       .then(() => {
-        spawnAsync(this.opts.vbox.exec, ["unregistervm", instance, "--delete"]);
+        return spawnAsync(this.opts.vbox.exec, ["unregistervm", instance, "--delete"]);
       });
   }
 
 }
+
+module.exports = VBoxEnvironment;

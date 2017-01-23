@@ -20,13 +20,18 @@ class AragoniteSocketReporter extends ReporterPlugin {
    * @param {Aragonite} server the parent Aragonite server.
    * @param {Object} opts the Aragonite options.
    * @param {Object} opts.socketReporter options to configure {@link AragoniteHTTPInputPlugin}
-   * @param {number} [opts.socketReporter.port=5717] a port to start an HTTP server listening for input commands on.
+   * @param {number} [opts.socketReporter.port=5727] a port to start an HTTP server listening for input commands on.
   */
   constructor(server, opts) {
     opts.socketReporter = Object.assign({}, AragoniteSocketReporter.defaults, opts.socketReporter);
     super(server, opts);
     this.app = express();
-    this.io = require("socket.io")(this.app);
+    this.http = require("http").Server(this.app);
+    this.io = require("socket.io")(this.http);
+    this.sockets = [];
+    this.io.on("connection", (socket) => {
+      this.sockets.push(socket);
+    });
   }
 
   /**
@@ -35,7 +40,7 @@ class AragoniteSocketReporter extends ReporterPlugin {
   */
   activate() {
     return new Promise((resolve, reject) => {
-      this.app.listen(this.opts.socketReporter.port, () => {
+      this.http.listen(this.opts.socketReporter.port, () => {
         resolve();
       });
     });
@@ -89,13 +94,18 @@ class AragoniteSocketReporter extends ReporterPlugin {
   */
   stop() {
     return new Promise((resolve, reject) => {
-      for(socket of this.io.sockets.sockets) {
-        socket.disconnect(true);
+      if(this.sockets) {
+        for(const socket of this.sockets) {
+          socket.disconnect(true);
+        }
       }
-      this.app.close(function() {
+      if(!this.http || !this.http.address()) { return resolve(); }
+      this.http.close(function() {
         resolve();
       });
     });
   }
 
 }
+
+module.exports = AragoniteSocketReporter;

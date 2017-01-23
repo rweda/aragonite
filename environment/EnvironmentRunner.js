@@ -24,7 +24,7 @@ class EnvironmentRunner {
     this.running = [];
     this.runAsync = true;
     this.totalCost = opts && opts.totalCost ? opts.totalCost : null;
-    if(environments.length > 0) {
+    if(this.environments.length > 0) {
       this.start();
     }
   }
@@ -53,7 +53,7 @@ class EnvironmentRunner {
     if(this.isFinished) {
       return;
     }
-    for(environment of this.environments) {
+    for(const environment of this.environments) {
       if(!this.canStart(environment)) {
         continue;
       }
@@ -63,7 +63,7 @@ class EnvironmentRunner {
       }
     }
     // If comparing parallel environments and none were started, switch to checking isolated environments.
-    if(this.runAsync && this.running.length < 0) {
+    if(this.runAsync && this.running.length < 1) {
       this.runAsync = false;
       this.start();
     }

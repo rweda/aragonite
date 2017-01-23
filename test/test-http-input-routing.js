@@ -8,7 +8,7 @@ var HTTPInput = require("../aragonite-http-input/aragonite-http-input");
 var fs = require("fs.extra");
 var tmp = require("tmp");
 
-describe("aragonite.loadPlugin()", function() {
+describe("aragonite-http-input routing", function() {
 
   let aragon = null;
   let input = null;
@@ -29,42 +29,42 @@ describe("aragonite.loadPlugin()", function() {
   describe("PUT /", function() {
 
     it("should work if no data given", function() {
-      chai
+      return chai
         .request(input.app)
         .put("/")
         .set("Content-Type", "multipart/form-data")
         .then(function (res) {
           res.should.have.status(200);
-          res.should.be.text;
-          res.body.should.equal("Started.");
+          res.should.be.html;
+          res.text.should.equal("Started.");
         });
     });
 
     it("should work if fields given", function() {
-      chai
+      return chai
         .request(input.app)
         .put("/")
         .field("name", "Test")
         .set("Content-Type", "multipart/form-data")
         .then(function(res) {
           res.should.have.status(200);
-          res.should.be.text;
-          res.body.should.equal("Started.");
+          res.should.be.html;
+          res.text.should.equal("Started.");
         });
     });
 
-    it("should work if file given", function() {
-      chai
+    it.skip("should work if file given", function() {
+      return chai
         .request(input.app)
         .put("/")
-        .attach("archive", "Testing", "archive.zip")
+        .attach("archive", fs.readFileSync(__dirname+"/test-http-input-routing.js"), "archive.zip")
         .set("Content-Type", "multipart/form-data")
         .then(function(res) {
           res.should.have.status(200);
-          res.should.be.text;
-          res.body.should.equal("Started.");
+          res.should.be.html;
+          res.text.should.equal("Started.");
           let file = fs.readFileSync(dir+"/archive.zip", "utf8");
-          file.should.equal("Testing");
+          file.should.equal(fs.readFileSync(__dirname+"/test-http-input-routing.js", "utf8"));
         });
     });
 

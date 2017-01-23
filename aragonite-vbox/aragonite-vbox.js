@@ -44,12 +44,9 @@ class AragoniteVBoxPlugin extends RunnerPlugin {
     opts.vbox = Object.assign({}, AragoniteVBoxPlugin.defaults, opts.vbox);
     super(server, opts);
     this.app = express();
-    this.io = require("socket.io")(this.app);
-    this.io.on("connection", function(socket) {
-      socket.on("mac", function(mac) {
-        socket.join(mac);
-      });
-    });
+    this.http = require("http").Server(this.app);
+    this.io = require("socket.io")(this.http);
+    this.sockets = [];
   }
 
   /**
@@ -58,12 +55,18 @@ class AragoniteVBoxPlugin extends RunnerPlugin {
    * @return {Promise<Environment[]>} resolve an array of {@link Environment} items.
   */
   start(opts) {
-    if(!this.server) {
-      this.server = this.app.listen(this.opts.vbox.port);
-    }
-    return Promise.resolve(this.opts.vbox.machines
-      .map((machine) => new VBoxEnvironment(this, this.server, this.opts, opts, machine))
-    );
+    return new Promise((resolve, reject) => {
+      if(this.http.address()) { return resolve(); }
+      this.http.listen(this.opts.vbox.port, function() {
+        resolve();
+      });
+    })
+    .then(() => {
+      return this.opts.vbox.machines.map((machine) => {
+        return new VBoxEnvironment(this, this.server, this.opts, opts, machine);
+      });
+    })
+    .catch((e) => { console.error(e); });
   }
 
   /**
@@ -72,11 +75,14 @@ class AragoniteVBoxPlugin extends RunnerPlugin {
    * @return {Promise} resolves when the runner has fully terminated.
   */
   stop() {
-    return Promise((resolve, reject) => {
-      for(socket of this.io.sockets.sockets) {
-        socket.disconnect(true);
+    return new Promise((resolve, reject) => {
+      if(this.sockets) {
+        for(const socket of this.sockets) {
+          socket.disconnect(true);
+        }
       }
-      this.app.close(function() {
+      if(!this.http || !this.http.close) { return resolve(); }
+      this.http.close(function() {
         resolve();
       });
     });

@@ -12,34 +12,66 @@ var should = chai.should();
 
 let conf = {
   vbox: {
-    exec: __dirname + "/vbox-stub/VBoxManage.js"
+    exec: __dirname + "/vbox-stub/VBoxManage.js",
+    machines: [
+      {
+        name: "Browsers on Ubuntu 14.04",
+        vbox: "AragoniteUbuntu",
+        snap: "ReadyForTesting",
+        dist: "Linux",
+        version: "14.04"
+      }
+    ]
   }
 };
 
+var eventToPromise = require("event-to-promise");
 var Aragonite = require("../Aragonite");
 
 describe("Aragonite Integration", function() {
 
   var aragon = null;
   beforeEach(function() {
-    aragon = new Aragonite();
+    aragon = new Aragonite(conf);
   });
 
   afterEach(function() {
-    aragon.stop();
+    return aragon.stop();
   });
 
   it("should start the server", function() {
-    aragon.start();
+    return aragon.start();
   });
 
   it("should start a run", function() {
-    aragon.start();
-    chai
-      .request("http://localhost:5717")
-      .put("/")
-      .then(function(res) {
-        res.should.have.status(200);
+    return aragon
+      .start()
+      .then(() => {
+        return chai
+          .request("http://localhost:5717")
+          .put("/")
+          .then(function(res) {
+            res.should.have.status(200);
+          });
+      });
+  });
+
+  it("should get start responses", function() {
+    let e = null;
+    return aragon
+      .start()
+      .then(() => {
+        let socket = require("socket.io-client")("http://localhost:5727");
+        e = eventToPromise(socket, "start");
+        return chai
+          .request("http://localhost:5717")
+          .put("/")
+          .then(function(res) {
+            res.should.have.status(200);
+          });
+      })
+      .then(() => {
+        return e;
       });
   });
 
