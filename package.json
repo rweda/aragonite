@@ -1,6 +1,6 @@
 {
   "name": "aragonite",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Self-hosted cross-platform testing solution.",
   "main": "Aragonite.js",
   "bin": {
