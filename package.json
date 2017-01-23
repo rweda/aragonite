@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Self-hosted cross-platform testing solution.",
   "main": "Aragonite.js",
+  "bin": {
+    "aragonite": "./bin/aragonite.js"
+  },
   "scripts": {
     "test": "mocha"
   },
