@@ -1,5 +1,9 @@
 "use strict";
 
+/**
+ * @TODO: Add option for a configuration file to load options from.
+*/
+
 var pkg = require("../package");
 var Aragonite = require("../Aragonite");
 
