@@ -71,7 +71,12 @@ class Aragonite {
         tasks.push(plugin.stop());
       }
     }
-    return Promise.all(tasks);
+    return Promise
+      .all(tasks)
+      .catch((err) => {
+        console.log(err);
+        throw err;
+      });
   }
 
   /**

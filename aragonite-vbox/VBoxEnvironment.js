@@ -65,10 +65,13 @@ class VBoxEnvironment extends Environment {
       .then((i) => {
         instance = i;
         this.namespace = this.vbox.io.of("/"+instance.mac);
-        this.namespace.on("connection", (socket) => {
-          this.vbox.sockets.push(socket);
-          socket.emit("machine", this.machine);
-          socket.emit("conf", this.conf);
+        this.finished = new Promise((resolve, reject) => {
+          this.namespace.on("connection", (socket) => {
+            this.vbox.sockets.push(socket);
+            socket.emit("machine", this.machine);
+            socket.emit("conf", this.conf);
+            socket.on("done", function() { resolve(); });
+          });
         });
         return this.start(instance.name);
       })
@@ -86,9 +89,7 @@ class VBoxEnvironment extends Environment {
         if(error) {
           return this.server.report.error(this.conf, this.identifier, error);
         }
-        else {
-          return this.server.report.success(this.conf, this.identifier);
-        }
+        return this.server.report.finished(this.conf, this.identifier);
       })
       .catch((err) => {
         console.error(err);
@@ -122,19 +123,12 @@ class VBoxEnvironment extends Environment {
    * @return {Promise} resolves once the machine has run all commands, and is ready to be shut down.
   */
   start(instance) {
-    let finished = new Promise((resolve, reject) => {
-      this.namespace.on("connection", (socket) => {
-        socket.on("done", () => {
-          resolve();
-        });
-      });
-    });
     return startup = spawnAsync(this.opts.vbox.exec, ["startvm", instance, "--type", "headless"])
       .then(() => {
         return this.server.report.start(this.conf, this.identifier);
       })
       .then(() => {
-        return finished;
+        return this.finished;
       });
   }
 

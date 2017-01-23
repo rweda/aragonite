@@ -68,13 +68,13 @@ class AragoniteSocketReporter extends ReporterPlugin {
   }
 
   /**
-   * Anounce that an environment has finished successfully.
+   * Anounce that an environment has finished.
    * @param {Object} conf standard options passed to runners.  See {@link Aragonite#start}.
    * @param {Object} identifier unique details to this run.  See {@link ReporterPlugin#start}.
    * @return {Promise} resolves once all reports have been sent.
   */
-  success(conf, identifier) {
-    return this._send("success", [conf, identifier]);
+  finished(conf, identifier) {
+    return this._send("finished", [conf, identifier]);
   }
 
   /**
@@ -94,15 +94,13 @@ class AragoniteSocketReporter extends ReporterPlugin {
   */
   stop() {
     return new Promise((resolve, reject) => {
-      if(this.sockets) {
-        for(const socket of this.sockets) {
-          socket.disconnect(true);
-        }
-      }
       if(!this.http || !this.http.address()) { return resolve(); }
       this.http.close(function() {
         resolve();
       });
+      if(this.sockets) {
+        for(const socket of this.sockets) { socket.disconnect(true); }
+      }
     });
   }
 

@@ -56,7 +56,9 @@ describe("Aragonite Integration", function() {
       });
   });
 
-  it("should get start responses", function() {
+  it("should get 'start' responses", function() {
+    this.slow(1000);
+    this.timeout(3000);
     let e = null;
     return aragon
       .start()
@@ -70,9 +72,26 @@ describe("Aragonite Integration", function() {
             res.should.have.status(200);
           });
       })
+      .then(() => { return e; });
+  });
+
+  it("should get 'finished' responses", function() {
+    this.slow(1500);
+    this.timeout(4000);
+    let e = null;
+    return aragon
+      .start()
       .then(() => {
-        return e;
-      });
+        let socket = require("socket.io-client")("http://localhost:5727");
+        e = eventToPromise(socket, "finished");
+        return chai
+          .request("http://localhost:5717")
+          .put("/")
+          .then(function(res) {
+            res.should.have.status(200);
+          });
+      })
+      .then(() => { return e; });
   });
 
 });

@@ -33,13 +33,13 @@ class ReporterPlugin extends Plugin {
   }
 
   /**
-   * Anounce that an environment has finished successfully.
+   * Anounce that an environment has finished.
    * @param {Object} conf standard options passed to runners.  See {@link Aragonite#start}.
    * @param {Object} identifier unique details to this run.  See {@link ReporterPlugin#start}.
    * @abstract
    * @return {Promise} resolves once all reports have been sent.
   */
-  success(conf, identifier) {
+  finish(conf, identifier) {
     return Promise.resolve();
   }
 

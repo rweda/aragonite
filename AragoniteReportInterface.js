@@ -28,12 +28,12 @@ class AragoniteReportInterface {
   }
 
   /**
-   * Anounce that an environment has finished successfully.
+   * Anounce that an environment has finished.
    * @param {Object} conf standard options passed to runners.  See {@link Aragonite#start}.
    * @param {Object} identifier unique details to this run.  See {@link ReporterPlugin#start}.
   */
-  success(conf, identifier) {
-    return this._send("success", [conf, identifier]);
+  finished(conf, identifier) {
+    return this._send("finished", [conf, identifier]);
   }
 
   /**

@@ -46,6 +46,9 @@ class AragoniteVBoxPlugin extends RunnerPlugin {
     this.app = express();
     this.http = require("http").Server(this.app);
     this.io = require("socket.io")(this.http);
+    this.io.on("connection", (socket) => {
+      this.sockets.push(socket);
+    });
     this.sockets = [];
   }
 
@@ -76,15 +79,13 @@ class AragoniteVBoxPlugin extends RunnerPlugin {
   */
   stop() {
     return new Promise((resolve, reject) => {
-      if(this.sockets) {
-        for(const socket of this.sockets) {
-          socket.disconnect(true);
-        }
-      }
       if(!this.http || !this.http.close) { return resolve(); }
-      this.http.close(function() {
+      this.http.close(() => {
         resolve();
       });
+      if(this.sockets) {
+        for(const socket of this.sockets) { socket.disconnect(true); }
+      }
     });
   }
 
