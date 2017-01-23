@@ -89,6 +89,20 @@ paths:
             name: "Build #7"
             repo: "https://github.com/rweda/aragonite.git"
             commit: "d6da1a2c3061bbc30a0f547f026e5bb112a18c8e"
+  report:
+    put:
+      summary: "EMIT report"
+      description: |
+        Clients can provide Aragonite with run results, which will be transmitted to the reporter plugins.
+        
+        ```js
+        socket.emit({
+          format: "goodbad",
+          passed: false,
+          good: 50,
+          bad: 1
+        });
+        ```
   done:
     put:
       summary: "EMIT done"

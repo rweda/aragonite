@@ -68,6 +68,17 @@ class AragoniteSocketReporter extends ReporterPlugin {
   }
 
   /**
+   * Provide a report of testing generated inside the environment.
+   * @param {Object} conf standard options passed to runners.  See {@link Aragonite#start}.
+   * @param {Object} identifier unique details to this run.  See {@link ReporterPlugin#start}.
+   * @param {Report} report the report to transmit.
+   * @return {Promise} resolves once all reports have been sent.
+  */
+  report(conf, identifier, report) {
+    return this._send("report", [conf, identifier, report]);
+  }
+
+  /**
    * Anounce that an environment has finished.
    * @param {Object} conf standard options passed to runners.  See {@link Aragonite#start}.
    * @param {Object} identifier unique details to this run.  See {@link ReporterPlugin#start}.

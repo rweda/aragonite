@@ -94,4 +94,31 @@ describe("Aragonite Integration", function() {
       .then(() => { return e; });
   });
 
+  it("should get 'report' responses", function() {
+    this.slow(1500);
+    this.timeout(4000);
+    let e = null;
+    return aragon
+      .start()
+      .then(() => {
+        let socket = require("socket.io-client")("http://localhost:5727");
+        e = eventToPromise(socket, "report");
+        return chai
+          .request("http://localhost:5717")
+          .put("/")
+          .then(function(res) {
+            res.should.have.status(200);
+          });
+      })
+      .then(() => { return e; })
+      .then((details) => {
+        should.exist(details);
+        details.length.should.equal(3);
+        let report = details[2];
+        report.should.be.an.object;
+        report.format.should.equal("goodbad");
+        report.good.should.equal(50);
+      });
+  });
+
 });

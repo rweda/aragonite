@@ -28,9 +28,21 @@ class AragoniteReportInterface {
   }
 
   /**
+   * Provide a report of testing generated inside the environment.
+   * @param {Object} conf standard options passed to runners.  See {@link Aragonite#start}.
+   * @param {Object} identifier unique details to this run.  See {@link ReporterPlugin#start}.
+   * @param {Report} report the report to transmit.
+   * @return {Promise} resolves once all reports have been sent.
+  */
+  report(conf, identifier, report) {
+    return this._send("report", [conf, identifier, report]);
+  }
+
+  /**
    * Anounce that an environment has finished.
    * @param {Object} conf standard options passed to runners.  See {@link Aragonite#start}.
    * @param {Object} identifier unique details to this run.  See {@link ReporterPlugin#start}.
+   * @return {Promise} resolves once all reports have been sent.
   */
   finished(conf, identifier) {
     return this._send("finished", [conf, identifier]);
@@ -41,6 +53,7 @@ class AragoniteReportInterface {
    * @param {Object} conf standard options passed to runners.  See {@link Aragonite#start}.
    * @param {Object} identifier unique details to this run.  See {@link ReporterPlugin#start}.
    * @param {Error} err the error that was encountered.
+   * @return {Promise} resolves once all reports have been sent.
   */
   error(conf, identifier, err) {
     return this._send("error", [conf, identifier, err]);

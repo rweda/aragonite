@@ -24,7 +24,12 @@ socket.on("conf", function(conf) {
 Promise
   .all([eventToPromise(socket, "machine"), eventToPromise(socket, "conf")])
   .then(function() {
-    //TODO: Emit success/failure
+    socket.emit("report", {
+      format: "goodbad",
+      good: 50,
+      bad: 2,
+      duration: 400
+    });
     socket.emit("done");
     console.log("Emitted 'done'.");
   });

@@ -71,6 +71,9 @@ class VBoxEnvironment extends Environment {
             socket.emit("machine", this.machine);
             socket.emit("conf", this.conf);
             socket.on("done", function() { resolve(); });
+            socket.on("report", (report) => {
+              this.server.report.report(this.conf, this.identifier, report);
+            });
           });
         });
         return this.start(instance.name);
