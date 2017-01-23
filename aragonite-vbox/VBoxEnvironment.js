@@ -64,6 +64,7 @@ class VBoxEnvironment extends Environment {
       .provision()
       .then((i) => {
         instance = i;
+        this.vbox.runs[instance.mac] = {conf: this.conf};
         this.namespace = this.vbox.io.of("/"+instance.mac);
         this.finished = new Promise((resolve, reject) => {
           this.namespace.on("connection", (socket) => {

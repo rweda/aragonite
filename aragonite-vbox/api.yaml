@@ -116,6 +116,23 @@ paths:
           socket.emit("done");
         });
         ```
+  /{mac}/archive/:
+    get:
+      description: |
+        Fetch the archive file associated with this machine.
+      parameters:
+        - name: mac
+          type: string
+          in: path
+          required: true
+          description: Provide the MAC address of the current machine.
+      responses:
+        '404':
+          description: The MAC address wasn't found.
+        '204':
+          description: The MAC address was located, but no archive was associated with the run.
+        '200':
+          description: Provides the contents of the archive file provided to Aragonite.
 definitions:
   MachineData:
     type: object

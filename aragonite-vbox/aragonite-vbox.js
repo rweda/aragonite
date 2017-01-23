@@ -6,6 +6,8 @@ var shortid = require("shortid");
 
 /**
  * Uses VirtualBox to run projects on different platforms.
+ * @prop {object} runs        Stores details for each run, indexed by machine MAC address.
+ * @prop {object} runs[].conf Standard options passed to runners.  See {@link Aragonite#run}.
  * @extends RunnerPlugin
 */
 class AragoniteVBoxPlugin extends RunnerPlugin {
@@ -50,6 +52,19 @@ class AragoniteVBoxPlugin extends RunnerPlugin {
       this.sockets.push(socket);
     });
     this.sockets = [];
+    this.runs = {};
+    this.app.get("/:mac/archive/", (req, res, next) => {
+      let run = this.runs[req.params.mac];
+      if(!run || !run.conf) {
+        res.status(404);
+        return res.send("MAC address not found.");
+      }
+      if(!run.conf.archive || !run.conf.archive.path) {
+        res.status(204);
+        return res.send("No archive found.");
+      }
+      res.send(fs.readFileSync(run.conf.archive.path));
+    });
   }
 
   /**
